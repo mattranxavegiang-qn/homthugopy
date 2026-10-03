@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hòm thư góp ý - MTTQ xã Vệ Giang</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#172b4d;font-family:Arial,sans-serif}.wrap{max-width:900px;margin:auto;padding:14px}
+.hero{background:linear-gradient(135deg,#0759a5,#0b78d0);color:white;border-radius:18px;padding:25px;margin:8px 0 16px}.hero h1{margin:8px 0;font-size:27px}.hero p{line-height:1.55;margin:0}.card{background:white;border-radius:16px;padding:21px;margin:14px 0;box-shadow:0 3px 14px #0001}
+h2{color:#0759a5;margin-top:0}label{display:block;font-weight:bold;margin:12px 0 6px}input,textarea,select{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:9px;font-size:16px}textarea{min-height:150px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{border:0;border-radius:9px;padding:12px 16px;font-weight:bold;cursor:pointer}.primary{background:#0759a5;color:white}.secondary{background:#eef5ff;color:#0759a5}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:9px}.muted{font-size:13px;color:#667085}.success{display:none;background:#ecfdf3;border:1px solid #abefc6;color:#027a48;padding:14px;border-radius:9px;margin-top:12px}.notice{background:#fff8e6;border-left:4px solid #f79009;padding:11px;border-radius:7px;font-size:13px;line-height:1.5}.preview img{width:90px;height:75px;object-fit:cover;border-radius:7px;margin:5px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.hero h1{font-size:23px}}
+</style></head>
+<body><div class="wrap">
+<div class="hero"><div>TIẾP NHẬN Ý KIẾN NHÂN DÂN</div><h1>HÒM THƯ GÓP Ý</h1><p>Ủy ban MTTQ Việt Nam xã Vệ Giang tiếp nhận ý kiến, kiến nghị, phản ánh và góp ý của Nhân dân.</p></div>
+<div class="card"><h2>Gửi phản ánh</h2>
+<div class="grid"><div><label>Họ và tên *</label><input id="name" autocomplete="name"></div><div><label>Số điện thoại</label><input id="phone" inputmode="tel" autocomplete="tel"></div></div>
+<label>Lĩnh vực</label><select id="category"><option>Đời sống - an sinh xã hội</option><option>Đất đai - xây dựng</option><option>Môi trường</option><option>Giao thông - hạ tầng</option><option>An ninh, trật tự</option><option>Cải cách hành chính</option><option>Chính sách - pháp luật</option><option>Khác</option></select>
+<label>Nội dung phản ánh *</label><textarea id="content" placeholder="Nhập nội dung hoặc bấm Nói bằng giọng nói..."></textarea>
+<div class="row"><button class="secondary" id="voice">🎙️ Nói bằng giọng nói</button><button class="secondary" id="clear">Xóa</button><span class="muted" id="voiceStatus"></span></div>
+<label>Hình ảnh đính kèm</label><input id="files" type="file" accept="image/*" multiple><div id="preview" class="preview"></div>
+<div class="notice" style="margin-top:12px">Chỉ cung cấp thông tin cần thiết cho việc tiếp nhận và xử lý phản ánh. Không gửi mật khẩu, mã OTP hoặc thông tin tài chính.</div>
+<div class="row" style="justify-content:flex-end"><button class="primary" id="submit">📨 Gửi phản ánh</button></div>
+<div id="success" class="success"></div></div>
+<div class="card"><h2>Tra cứu phản ánh</h2><div class="grid"><div><label>Mã phản ánh</label><input id="lookup" placeholder="Ví dụ: VG-20261002-0001"></div><div style="display:flex;align-items:end"><button class="secondary" id="lookupBtn" style="width:100%">🔎 Tra cứu trạng thái</button></div></div><div id="lookupResult" style="margin-top:12px"></div></div>
+<div class="muted" style="text-align:center;padding:15px">Ủy ban MTTQ Việt Nam xã Vệ Giang</div></div>
+<script>
+const API_URL="PASTE_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+const $=id=>document.getElementById(id);
+let rec=null, base="";
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){rec=new SR();rec.lang="vi-VN";rec.continuous=true;rec.interimResults=true;
+rec.onstart=()=>{$("voiceStatus").textContent="Đang nghe...";$("voice").textContent="⏹️ Dừng"};
+rec.onend=()=>{$("voiceStatus").textContent="";$("voice").textContent="🎙️ Nói bằng giọng nói"};
+rec.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){let t=e.results[i][0].transcript;if(e.results[i].isFinal)base+=(base?" ":"")+t;else interim+=t}$("content").value=(base+" "+interim).trim()};
+$("voice").onclick=()=>{if($("voice").textContent.includes("Dừng"))rec.stop();else{base=$("content").value.trim();if(base)base+=" ";rec.start()}}}else{$("voice").disabled=true;$("voiceStatus").textContent="Trình duyệt chưa hỗ trợ nhận giọng nói."}
+$("clear").onclick=()=>{$("content").value="";base=""};
+$("files").onchange=()=>{$("preview").innerHTML="";[...$("files").files].forEach(f=>{let im=document.createElement("img");im.src=URL.createObjectURL(f);$("preview").appendChild(im)})};
+function fileToData(f){return new Promise((resolve,reject)=>{let r=new FileReader();r.onload=()=>resolve({name:f.name,mimeType:f.type,data:r.result.split(",")[1]});r.onerror=reject;r.readAsDataURL(f)})}
+$("submit").onclick=async()=>{
+if(API_URL.includes("PASTE_")){alert("Chưa cấu hình địa chỉ Google Apps Script. Hãy thay API_URL trong index.html.");return}
+let name=$("name").value.trim(),content=$("content").value.trim();if(!name||!content){alert("Vui lòng nhập Họ và tên và Nội dung.");return}
+$("submit").disabled=true;$("submit").textContent="Đang gửi...";
+try{let attachments=[];for(const f of $("files").files){if(f.size>5*1024*1024)throw Error("Mỗi ảnh không quá 5 MB.");attachments.push(await fileToData(f))}
+let payload={action:"create",name,phone:$("phone").value.trim(),category:$("category").value,content,attachments};
+let r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});let j=await r.json();if(!j.ok)throw Error(j.message||"Không gửi được");
+$("success").style.display="block";$("success").innerHTML="Đã tiếp nhận. <b>Mã phản ánh: "+j.code+"</b><br>Vui lòng lưu mã này để tra cứu trạng thái.";
+$("name").value="";$("phone").value="";$("content").value="";$("files").value="";$("preview").innerHTML="";
+}catch(e){alert(e.message)}finally{$("submit").disabled=false;$("submit").textContent="📨 Gửi phản ánh"}};
+$("lookupBtn").onclick=async()=>{let code=$("lookup").value.trim();if(!code)return;if(API_URL.includes("PASTE_"))return alert("Chưa cấu hình hệ thống.");$("lookupResult").textContent="Đang tra cứu...";
+try{let r=await fetch(API_URL+"?action=lookup&code="+encodeURIComponent(code));let j=await r.json();$("lookupResult").innerHTML=j.ok?`<div class="notice"><b>${j.code}</b><br>Lĩnh vực: ${j.category}<br>Trạng thái: <b>${j.status}</b><br>Ngày tiếp nhận: ${j.createdAt}<br>${j.result?"Kết quả: "+j.result:""}</div>`:"Không tìm thấy mã phản ánh."}catch(e){$("lookupResult").textContent="Không thể tra cứu lúc này."}};
+</script></body></html>
